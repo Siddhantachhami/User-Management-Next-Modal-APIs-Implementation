@@ -1,31 +1,27 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
 
-exports.authMiddleware = async (req, res, next) => {
-  try {
-    const token = req.header("Authorization").replace("Bearer ", "");
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+const authenticateJWT = (req, res, next) => {
+  const token = req.header("Authorization")?.split(" ")[1]; // Assuming token is passed in 'Authorization' header as 'Bearer token'
 
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
+  if (!token) {
+    return res.status(403).json({ message: "Token not provided" });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: "Invalid token" });
     }
 
-    req.user = user;
+    req.user = user; // Attach user object to req.user
     next();
-  } catch (err) {
-    res.status(401).json({ message: "Unauthorized", error: err.message });
-  }
+  });
 };
 
-exports.adminMiddleware = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ message: "Unauthorized" });
+const isAdmin = (req, res, next) => {
+  if (req.user && req.user.role === "admin") {
+    return next();
   }
-
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-
-  next();
+  return res.status(403).json({ message: "Access denied. Admins only." });
 };
+
+module.exports = { authenticateJWT, isAdmin };
