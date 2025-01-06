@@ -1,7 +1,6 @@
 const User = require("../models/User");
 const cloudinary = require("../config/cloudnary");
 const bcrypt = require("bcryptjs");
-const httpStatus = require("http-status");
 
 const updateProfile = async (req, res) => {
   try {
@@ -28,19 +27,15 @@ const updateProfile = async (req, res) => {
     );
 
     if (!updatedUser) {
-      return res
-        .status(httpStatus.NOT_FOUND)
-        .json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     res
-      .status(httpStatus.OK)
+      .status(200)
       .json({ message: "Profile updated successfully", updatedUser });
   } catch (error) {
     console.error(error);
-    res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .json({ message: "Server error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -50,9 +45,7 @@ const deleteProfile = async (req, res) => {
     const deletedUser = await User.findByIdAndDelete(userId);
 
     if (!deletedUser) {
-      return res
-        .status(httpStatus.NOT_FOUND)
-        .json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     if (deletedUser.profileImage) {
@@ -60,12 +53,10 @@ const deleteProfile = async (req, res) => {
       await cloudinary.uploader.destroy(publicId);
     }
 
-    res.status(httpStatus.OK).json({ message: "Profile deleted successfully" });
+    res.status(200).json({ message: "Profile deleted successfully" });
   } catch (error) {
     console.error(error);
-    res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .json({ message: "Server error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -75,19 +66,15 @@ const getAuthenticatedUser = async (req, res) => {
 
     const user = await User.findById(userId).select("-password");
     if (!user) {
-      return res
-        .status(httpStatus.NOT_FOUND)
-        .json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     res
-      .status(httpStatus.OK)
+      .status(200)
       .json({ message: "Authenticated user retrieved successfully", user });
   } catch (error) {
     console.error(error);
-    res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .json({ message: "Server error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 

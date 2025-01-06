@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const httpStatus = require("http-status");
 
 exports.authMiddleware = async (req, res, next) => {
   try {
@@ -9,29 +8,23 @@ exports.authMiddleware = async (req, res, next) => {
     const user = await User.findById(decoded.id);
 
     if (!user) {
-      return res
-        .status(httpStatus.UNAUTHORIZED)
-        .json({ message: "User not found" });
+      return res.status(401).json({ message: "User not found" });
     }
 
     req.user = user;
     next();
   } catch (err) {
-    res
-      .status(httpStatus.UNAUTHORIZED)
-      .json({ message: "Unauthorized", error: err.message });
+    res.status(401).json({ message: "Unauthorized", error: err.message });
   }
 };
 
 exports.adminMiddleware = (req, res, next) => {
   if (!req.user) {
-    return res
-      .status(httpStatus.UNAUTHORIZED)
-      .json({ message: "Unauthorized" });
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   if (req.user.role !== "admin") {
-    return res.status(httpStatus.FORBIDDEN).json({ message: "Forbidden" });
+    return res.status(403).json({ message: "Forbidden" });
   }
 
   next();
